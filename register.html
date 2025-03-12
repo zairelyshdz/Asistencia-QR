@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>EduTrack - Registro de Usuario</title>
+
+    <!-- Custom fonts -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+
+     <!-- Alertas estilizadas -->
+     <style>
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-primary">
+
+    <div class="container">
+        <div class="card o-hidden border-0 shadow-lg my-5">
+            <div class="card-body p-0">
+                <div class="row">
+                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
+                    <div class="col-lg-7">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h1 class="h4 text-gray-900 mb-4">Crear Cuenta</h1>
+                            </div>
+                            
+                            <form class="user" id="registerForm" action="php/registro.php" method="post">
+                                <div class="form-group row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <input type="text" class="form-control form-control-user" id="exampleFirstName" name="Nombre"
+                                            placeholder="Nombre"  required>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="text" class="form-control form-control-user" id="exampleLastName" name="Apellido"
+                                            placeholder="Apellido" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" class="form-control form-control-user" id="exampleInputEmail" name="Correo Electrónico"
+                                        placeholder="Correo" required>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <input type="password" class="form-control form-control-user" id="exampleInputPassword" name="Contraseña"
+                                            placeholder="Contraseña" required>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="password" class="form-control form-control-user" id="exampleRepeatPassword" name="Repetir Contraseña"
+                                            placeholder="Repetir Contraseña" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <input type="date" class="form-control form-control-user" id="exampleBirthDate" name="Fecha de Nacimiento"
+                                        placeholder="Fecha de Nacimiento" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-user" 
+                                           id="exampleCedula" name="Cédula de Identidad"
+                                           placeholder="Cédula (V-12345678 o ID Extranjero)"
+                                           pattern="[VE]?-?\d{6,8}|[A-Z0-9-]{7,12}"
+                                           title="Formato válido: V/E seguido de 6-8 dígitos o ID extranjero de 7-12 caracteres" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-user" id="exampleYear" name="Año"
+                                        placeholder="Año que cursa" list="yearOptions" required>
+                                    <datalist id="yearOptions">
+                                        <option value="1">
+                                        <option value="2">
+                                        <option value="3">
+                                        <option value="4">
+                                        <option value="5">
+                                        <option value="6">
+                                    </datalist>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-user" id="exampleSection" name="Sección"
+                                        placeholder="Sección" list="sectionOptions" required>
+                                    <datalist id="sectionOptions">
+                                        <option value="A">
+                                        <option value="B">
+                                    </datalist>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-user" id="exampleGender" name="Género"
+                                        placeholder="Género" list="genderOptions" required>
+                                    <datalist id="genderOptions">
+                                        <option value="Masculino">
+                                        <option value="Femenino">
+                                    </datalist>
+                                </div>
+                                <button type="submit" value="Registrar" class="btn btn-primary btn-user btn-block"> Registrar Cuenta
+                                </button>
+                             </form>
+                                
+                            </form>
+                            <hr>
+                            <div class="text-center">
+                                <a class="small" href="forgot-password.html">¿Olvidaste tu contraseña?</a>
+                            </div>
+                            <div class="text-center">
+                                <a class="small" href="index.php">¿Ya tienes una cuenta? Inicia Sesión</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <!-- Scripts necesarios -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <script>
+    function handleRegister() {
+        const formData = new FormData(document.getElementById('registerForm'));
+
+        // Agregar en el script
+document.getElementById('exampleCedula').addEventListener('input', function(e) {
+    const cedula = e.target.value;
+    const isValid = /^[VE]?-?\d{6,8}$/.test(cedula) || /^[A-Z0-9-]{7,12}$/.test(cedula);
+    e.target.classList.toggle('is-invalid', !isValid);
+});
+        
+        // Validación de contraseña en cliente
+        if (formData.get('password') !== formData.get('repeatPassword')) {
+            showAlert('Las contraseñas no coinciden', 'danger');
+            return;
+        }
+
+        fetch('../api/register.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('Registro exitoso! Redirigiendo...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.php';
+                }, 2000);
+            } else {
+                showAlert(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error en el servidor', 'danger');
+            console.error('Error:', error);
+        });
+    }
+
+    function showAlert(message, type) {
+        const alert = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>`;
+        
+        document.getElementById('alertContainer').innerHTML = alert;
+    }
+    </script>
+
+</body>
+
+</html>

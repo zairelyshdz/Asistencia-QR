@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Registro de Asistencia - Lector QR</title>
+    
+    <!-- Estilos y dependencias -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .scanner-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px solid #4e73df;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #video {
+            width: 100%;
+            height: auto;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 100vmax rgba(0,0,0,0.5);
+        }
+
+        .camera-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-primary">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-9">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h1 class="h4 text-gray-900 mb-4">Registro de Asistencia</h1>
+                                <p class="lead">Escanee su código QR frente a la cámara</p>
+                            </div>
+
+                            <div class="scanner-container">
+                                <video id="video" autoplay playsinline></video>
+                                <div class="scanner-overlay"></div>
+                            </div>
+
+                            <div class="camera-controls">
+                                <button id="switchCamera" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-sync-alt"></i> Cambiar Cámara
+                                </button>
+                                <button id="toggleTorch" class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-lightbulb"></i> Linterna
+                                </button>
+                            </div>
+
+                            <div id="status" class="text-center mt-3 text-primary font-weight-bold"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <script>
+        let videoStream = null;
+        let currentFacingMode = 'environment';
+        let scanning = false;
+        let torchSupported = false;
+
+        // Inicializar cámara
+        // Configuración mejorada de la cámara
+async function initializeCamera(facingMode = 'environment') {
+    try {
+        const constraints = {
+            video: {
+                facingMode: facingMode,
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 },
+                frameRate: { ideal: 30 }
+            }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('video');
+        
+        // Optimización de rendimiento
+        video.srcObject = stream;
+        await video.play();
+        
+        // Configuración del canvas con willReadFrequently
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        startScanning(video, canvas, ctx);
+        
+    } catch (error) {
+        console.error('Error de cámara:', error);
+        showCameraError(error);
+    }
+}
+
+function showCameraError(error) {
+    Swal.fire{(
+        icon: 'error',
+        title: 'Error de cámara',
+        html: `<div class="text-left">
+                <p>Posibles soluciones:</p>
+                <ol>
+                    <li>Asegurar permisos de cámara</li>
+                    <li>Reiniciar el navegador</li>
+                    <li>Verificar que no hay otras apps usando la cámara</li>
+                </ol>
+                <code>${error.message}</code>
+              </div>`,
+        scrollbarPadding: false
+    });
+
+        // Iniciar escaneo continuo
+        function startScanning() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            scanning = true;
+
+            function tick() {
+                if (!scanning) return;
+                
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'dontInvert'
+                    });
+
+                    if (code) {
+                        handleQRScan(code.data);
+                        scanning = false; // Pausar escaneo temporalmente
+                    }
+                }
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        // Manejar código QR escaneado
+        async function handleQRScan(qrData) {
+    try {
+        document.getElementById('status').textContent = 'Procesando...';
+        
+        const response = await fetch('php/controllers/qr_scan.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ token: qrData })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        Swal.fire({
+            icon: 'success',
+            title: `Registro de ${result.tipo}`,
+            html: `<b>Hora:</b> ${result.hora}`,
+            timer: 2000
+        });
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            html: `<small>${error.message}</small>`
+        });
+    } finally {
+        document.getElementById('status').textContent = '';
+        scanning = true;
+    }
+}
+
+        // Controladores de eventos
+        document.getElementById('switchCamera').addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            initializeCamera(currentFacingMode);
+        });
+
+        document.getElementById('toggleTorch').addEventListener('click', () => {
+            const track = videoStream.getVideoTracks()[0];
+            track.applyConstraints({
+                advanced: [{ torch: !track.getSettings().torch }]
+            });
+        });
+
+        // Inicializar al cargar
+        window.addEventListener('load', () => initializeCamera());
+        
+        // Limpiar al cerrar
+        window.addEventListener('beforeunload', () => {
+            if(videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
